@@ -1,4 +1,4 @@
-# Air Quality Report Generator
+# TINOAIRE Air Quality Report Generator
 
 This script generates an air quality report based on data from the IQAir API and sends it via email. It also includes functionality to schedule report generation at specific times daily.
 
@@ -59,9 +59,10 @@ to = "recipient@example.com"
 The script is set to generate reports at 7:00 a.m. and 12:00 p.m. daily. You can adjust the schedule by modifying the following lines:
 
 # Schedule report generation at 7:00 a.m. and 12:00 p.m. every day
+```
 schedule.every().day.at("07:00").do(send_report)
 schedule.every().day.at("12:00").do(send_report)
-
+```
 ## Running in the Background
 The script runs the report generation process in the background using a separate thread. It ensures that scheduled reports are generated even if the script is not actively running.
 
