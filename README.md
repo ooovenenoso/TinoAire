@@ -1,101 +1,123 @@
+# Air Quality Report Generator
 
-# Resumen Integrado del Proyecto del TinoAire para Monitoreo de Calidad del Aire en Centros Educativos con Enfoque en Menores de 5 Años
+This script generates an air quality report based on data from the IQAir API and sends it via email. It also includes functionality to schedule report generation at specific times daily.
 
----
+## Prerequisites
 
-## Objetivo
+Before using this script, make sure you have the following:
 
-Desarrollar un bot en Python que utilice la Air Quality API de Google Cloud para monitorear la calidad del aire en localidades preestablecidas de centros educativos enfocados en participantes menores de 5 años. El bot generará alertas basadas en métricas fiables, clasificadas en tres banderas de colores: verde, amarillo y rojo. Se enviará un informe consolidado vía correo electrónico para su evaluación.
+- Python 3.x installed
+- Required Python packages installed (you can install them using `pip`):
+  - `csv`
+  - `requests`
+  - `time`
+  - `yagmail`
+  - `pandas`
+  - `openpyxl`
 
----
+## Usage
 
-## Componentes Clave
+1. Set your IQAir API key in the `API_KEY` variable.
+2. Prepare a CSV file named `locations.csv` containing the locations' names, latitudes, and longitudes. The file should have the following format:
 
-1. **API de Google Cloud - Air Quality**: Fuente de datos para la calidad del aire.
-2. **Coordenadas Preestablecidas**: Lista de localidades geográficas de centros educativos.
-3. **Métricas de Evaluación**: Parámetros específicos de calidad del aire que serán evaluados, con un enfoque en la seguridad de niños menores de 5 años. (Detalles más abajo).
-4. **Sistema de Alertas**: Bandera verde: Calidad del aire aceptable. Bandera amarilla: Calidad del aire moderada, se necesita revisión. Bandera roja: Calidad del aire peligrosa, servicio no disponible.
-5. **Informe Consolidado**: Resumen de los hallazgos para cada localidad, generado en un formato fácil de leer.
-6. **Envío de Correo Electrónico**: Distribución del informe para su evaluación.
+LocationName, Latitude, Longitude
+```
+- Location1, 12.3456, -78.9012
+- Location2, 34.5678, -56.7890
+```
 
----
+You can also omit the location name and provide only latitude and longitude if not needed.
 
-## Métricas de Evaluación para Participantes Menores de 5 Años
+3. Run the script by executing `python main.py` in your terminal.
 
-#### 1. PM2.5 (Partículas Menores a 2.5 Micrómetros)
+## Report Generation
 
-- **Bandera Verde**: < 12 µg/m³
-- **Bandera Amarilla**: 12-35 µg/m³
-- **Bandera Roja**: > 35 µg/m³
-- **Fuente**: [EPA](https://www.epa.gov/pm-pollution/particulate-matter-pm-basics)
+The script generates an air quality report for each location listed in `locations.csv`. The report includes the following information:
 
-##### Aplicación en Menores de 5 Años
-Las partículas PM2.5 son extremadamente pequeñas y pueden penetrar profundamente en los pulmones y hasta llegar al torrente sanguíneo. Los niños menores de 5 años tienen sistemas respiratorios en desarrollo y son más susceptibles a la irritación y las infecciones respiratorias causadas por estas partículas.
+- Location Name
+- Latitude
+- Longitude
+- AQI (Air Quality Index) for the location
+- Main pollutant for the location
+- Health recommendations based on the AQI
 
----
+The report is saved in `history.csv`, and a modified version with colored AQI cells is saved in `modified_history.xlsx`.
 
-#### 2. PM10 (Partículas Menores a 10 Micrómetros)
+## Email Configuration
 
-- **Bandera Verde**: < 20 µg/m³
-- **Bandera Amarilla**: 20-50 µg/m³
-- **Bandera Roja**: > 50 µg/m³
-- **Fuente**: [EPA](https://www.epa.gov/pm-pollution/particulate-matter-pm-basics)
+The script sends the report via email using yagmail. Configure your Gmail credentials in the script by setting your email address and password:
 
-##### Aplicación en Menores de 5 Años
-Aunque las partículas PM10 son más grandes que las PM2.5, también pueden ser inhaladas y llegar a los pulmones. Pueden causar problemas respiratorios y agravar condiciones preexistentes como el asma en niños menores de 5 años.
+```python
+email_address = "your_email@gmail.com"
+password = "your_password"
+```
+Additionally, specify the recipient's email address:
+```
+to = "recipient@example.com"
+```
+## Report Schedule
+The script is set to generate reports at 7:00 a.m. and 12:00 p.m. daily. You can adjust the schedule by modifying the following lines:
 
----
+# Schedule report generation at 7:00 a.m. and 12:00 p.m. every day
+schedule.every().day.at("07:00").do(send_report)
+schedule.every().day.at("12:00").do(send_report)
 
-#### 3. Dióxido de Nitrógeno (NO2)
+## Running in the Background
+The script runs the report generation process in the background using a separate thread. It ensures that scheduled reports are generated even if the script is not actively running.
 
-- **Bandera Verde**: < 25 ppb
-- **Bandera Amarilla**: 25-45 ppb
-- **Bandera Roja**: > 45 ppb
-- **Fuente**: [EPA](https://www.epa.gov/no2-pollution/basic-information-about-no2)
+To start the script and initiate the background thread, run the script as the main module:
 
-##### Aplicación en Menores de 5 Años
-La exposición al NO2 puede irritar las vías respiratorias y contribuir al desarrollo de infecciones respiratorias en niños menores de 5 años. También puede agravar condiciones preexistentes como el asma.
+```
+if __name__ == "__main__":
+    scheduler_thread = threading.Thread(target=run_schedule)
+    scheduler_thread.start()
+```
 
----
+## Metrics and Legend
+The script calculates the Air Quality Index (AQI) for each location and assigns a color code based on the EPA's AQI categories. Here's a breakdown of the AQI metrics and the corresponding legend:
 
-#### 4. Ozono (O3)
+- Green Flag (0 to 50 - Good): The air quality is considered satisfactory, and there is minimal to no risk from air pollution.
 
-- **Bandera Verde**: < 40 ppb
-- **Bandera Amarilla**: 40-70 ppb
-- **Bandera Roja**: > 70 ppb
-- **Fuente**: [EPA](https://www.epa.gov/ozone-pollution)
+- Yellow Flag (51 to 100 - Moderate): The air quality is acceptable, but there may be moderate health concerns for exceptionally sensitive people.
 
-##### Aplicación en Menores de 5 Años
-El ozono es un irritante pulmonar que puede afectar a los niños menores de 5 años, ya que sus sistemas respiratorios todavía están en desarrollo. Puede provocar síntomas como tos, dolor de garganta y reducción de la función pulmonar.
+- Orange Flag (101 to 150 - Unhealthy for Sensitive Groups): Members of sensitive groups may experience health effects. It is not likely to affect the general public.
 
----
+- Red Flag (151 to 200 - Unhealthy): Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.
 
-#### 5. Monóxido de Carbono (CO)
+- Purple Flag (201 to 300 - Very Unhealthy): Health alert: everyone may experience more serious health effects.
 
-- **Bandera Verde**: < 1 ppm
-- **Bandera Amarilla**: 1-2 ppm
-- **Bandera Roja**: > 2 ppm
-- **Fuente**: [EPA](https://www.epa.gov/co-pollution)
+- Maroon Flag (301 and above - Hazardous): Health warning of emergency conditions. The entire population is more likely to be affected.
 
-##### Aplicación en Menores de 5 Años
-El CO es un gas peligroso que puede causar daño a nivel celular debido a la falta de oxígeno. Es especialmente peligroso para los niños menores de 5 años, ya que incluso una pequeña cantidad puede tener efectos graves en su salud debido a su menor capacidad pulmonar y mayor tasa de inhalación en relación con su tamaño.
+These color-coded flags provide a quick visual reference for the air quality level in each location, making it easier to interpret the report.
 
----
+## How the Final Report Looks
+The final report is sent as an email in HTML format with an embedded header image. It includes the following sections:
 
-## Flujo de Trabajo
+- Header: The report begins with a header image for branding.
 
-1. **Configuración Inicial**: Credenciales API y bibliotecas.
-2. **Obtener Coordenadas**: Leer desde archivo CSV o base de datos.
-3. **Consulta a la API**: Iterar sobre cada conjunto de coordenadas.
-4. **Evaluación y Clasificación**: Asignar una de las tres banderas basadas en métricas detalladas anteriormente.
-5. **Generar Reporte**: Compilar los hallazgos en un archivo (CSV, PDF, etc.).
-6. **Envío de Correo**: Utilizar SMTP para enviar el informe por correo electrónico.
+- Title: An informative title introducing the air quality report for children under 5 years old, based on the EPA's Air Quality Index.
 
----
+- Disclaimer: A disclaimer stating that the email is automated and should not be replied to.
 
-## Tecnologías a Utilizar
+- Introduction: A brief introduction, addressing the recipient and explaining the purpose of the report.
 
-- Python
-- Google Cloud Air Quality API
-- SMTP para el envío de correos
-- CSV o Base de Datos para almacenar coordenadas
+- EPA Recommendations: Information on where to find additional details about the EPA's air quality metrics and recommendations.
+
+- Testing Phase: A note indicating that the report is part of a testing phase and mentions the data source.
+
+- Legend: The legend section, which explains the color-coded AQI flags and their meanings.
+
+- Report Data: The main report data, including location-specific AQI values, main pollutants, and health recommendations.
+
+- Attachment: The complete report is attached in an Excel file named "modified_history.xlsx."
+
+- Closing Message: A closing message expressing gratitude for the recipient's commitment to children's safety and well-being.
+
+- The report is designed to provide valuable information about air quality while maintaining a professional and informative format.
+
+## Sources
+IQAir API: https://api-docs.iqair.com/
+EPA Air Quality Index: https://www.epa.gov/air-research
+
+
+
