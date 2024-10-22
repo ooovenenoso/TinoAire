@@ -68,7 +68,3 @@ This Google Apps Script automates the process of fetching air quality data from 
 ## License
 
 This project is licensed under the MIT License.
-
-## Contact
-
-For any questions or assistance, please contact the technical support team at [support@example.com](mailto:support@example.com).
