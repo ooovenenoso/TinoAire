@@ -1,124 +1,74 @@
-# TINOAIRE Air Quality Report Generator
+# Air Quality Report Automation using Google Apps Script
 
-This script generates an air quality report based on data from the IQAir API and sends it via email. It also includes functionality to schedule report generation at specific times daily.
+This Google Apps Script automates the process of fetching air quality data from the IQAir API for specified locations and sends a daily email report. The script reads locations from a Google Sheets spreadsheet, retrieves the Air Quality Index (AQI) data, and emails a formatted report to the specified recipients.
+
+## Features
+
+- Fetches AQI data for multiple locations using the IQAir API.
+- Handles API rate limits with retries and delays between requests.
+- Generates a well-formatted HTML email with the AQI data.
+- Automatically sends the email report at a specified time each day.
+- Customizable email content and styling.
 
 ## Prerequisites
 
-Before using this script, make sure you have the following:
+- A Google Account.
+- Access to Google Drive and Google Sheets.
+- An IQAir API key. You can obtain one by signing up at [IQAir AirVisual API](https://www.iqair.com/air-pollution-data-api).
 
-- Python 3.x installed
-- Required Python packages installed (you can install them using `pip`):
-  - `csv`
-  - `requests`
-  - `time`
-  - `yagmail`
-  - `pandas`
-  - `openpyxl`
+## Setup Instructions
 
-## Usage
+### 1. Create the Spreadsheet
 
-1. Set your IQAir API key in the `API_KEY` variable.
-2. Prepare a CSV file named `locations.csv` containing the locations' names, latitudes, and longitudes. The file should have the following format:
+- Create a new Google Sheets spreadsheet.
+- Add the following headers in the first row:
+  - `Location`
+  - `Latitude`
+  - `Longitude`
+- Fill in the subsequent rows with the locations you want to monitor and their corresponding latitude and longitude coordinates.
 
-LocationName, Latitude, Longitude
-```
-- Location1, 12.3456, -78.9012
-- Location2, 34.5678, -56.7890
-```
+### 2. Create the Script
 
-You can also omit the location name and provide only latitude and longitude if not needed.
+- Open the Google Sheets spreadsheet you just created.
+- Go to `Extensions` > `Apps Script` to open the Apps Script editor.
+- Delete any placeholder code in the editor.
 
-3. Run the script by executing `python main.py` in your terminal.
+### 3. Copy the Script Code
 
-## Report Generation
+- Copy the contents of the `main.gs` file provided below.
+- Paste the code into the Apps Script editor.
 
-The script generates an air quality report for each location listed in `locations.csv`. The report includes the following information:
+### 4. Configure the Script
 
-- Location Name
-- Latitude
-- Longitude
-- AQI (Air Quality Index) for the location
-- Main pollutant for the location
-- Health recommendations based on the AQI
+- Replace `'YOUR_IQAIR_API_KEY'` with your actual IQAir API key.
+- Replace `'recipient@example.com'` with the email address where you want to send the report.
+- (Optional) Adjust the time zone and trigger time if needed.
 
-The report is saved in `history.csv`, and a modified version with colored AQI cells is saved in `modified_history.xlsx`.
+### 5. Set Up Permissions
 
-## Email Configuration
+- Click on the `Save` icon to save your script.
+- Go to `Run` > `sendDailyReport` to execute the script for the first time.
+- You will be prompted to authorize the script to access your Google Account data. Follow the prompts to grant the necessary permissions.
 
-The script sends the report via email using yagmail. Configure your Gmail credentials in the script by setting your email address and password:
+### 6. Set Up the Daily Trigger
 
-```python
-email_address = "your_email@gmail.com"
-password = "your_password"
-```
-Additionally, specify the recipient's email address:
-```
-to = "recipient@example.com"
-```
-## Report Schedule
-The script is set to generate reports at 7:00 a.m. and 12:00 p.m. daily. You can adjust the schedule by modifying the following lines:
+- In the Apps Script editor, go to `Run` > `createDailyTrigger` to set up the daily trigger.
+- This will schedule the script to run automatically at the specified time each day.
 
-# Schedule report generation at 7:00 a.m. and 12:00 p.m. every day
-```
-schedule.every().day.at("07:00").do(send_report)
-schedule.every().day.at("12:00").do(send_report)
-```
-## Running in the Background
-The script runs the report generation process in the background using a separate thread. It ensures that scheduled reports are generated even if the script is not actively running.
+## Script Files
 
-To start the script and initiate the background thread, run the script as the main module:
+- [`main.gs`](#maings): The main Google Apps Script code that performs all the operations.
 
-```
-if __name__ == "__main__":
-    scheduler_thread = threading.Thread(target=run_schedule)
-    scheduler_thread.start()
-```
+## Important Notes
 
-## Metrics and Legend
-The script calculates the Air Quality Index (AQI) for each location and assigns a color code based on the EPA's AQI categories. Here's a breakdown of the AQI metrics and the corresponding legend:
+- **API Rate Limits**: The script includes delays to handle API rate limits. Ensure your usage complies with the IQAir API terms and conditions.
+- **Sensitive Information**: Do not share your API key or any other sensitive information publicly.
+- **Email Styling**: The email content uses inline CSS for styling. Some email clients may not support all CSS features.
 
-- Green Flag (0 to 50 - Good): The air quality is considered satisfactory, and there is minimal to no risk from air pollution.
+## License
 
-- Yellow Flag (51 to 100 - Moderate): The air quality is acceptable, but there may be moderate health concerns for exceptionally sensitive people.
+This project is licensed under the MIT License.
 
-- Orange Flag (101 to 150 - Unhealthy for Sensitive Groups): Members of sensitive groups may experience health effects. It is not likely to affect the general public.
+## Contact
 
-- Red Flag (151 to 200 - Unhealthy): Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.
-
-- Purple Flag (201 to 300 - Very Unhealthy): Health alert: everyone may experience more serious health effects.
-
-- Maroon Flag (301 and above - Hazardous): Health warning of emergency conditions. The entire population is more likely to be affected.
-
-These color-coded flags provide a quick visual reference for the air quality level in each location, making it easier to interpret the report.
-
-## How the Final Report Looks
-The final report is sent as an email in HTML format with an embedded header image. It includes the following sections:
-
-- Header: The report begins with a header image for branding.
-
-- Title: An informative title introducing the air quality report for children under 5 years old, based on the EPA's Air Quality Index.
-
-- Disclaimer: A disclaimer stating that the email is automated and should not be replied to.
-
-- Introduction: A brief introduction, addressing the recipient and explaining the purpose of the report.
-
-- EPA Recommendations: Information on where to find additional details about the EPA's air quality metrics and recommendations.
-
-- Testing Phase: A note indicating that the report is part of a testing phase and mentions the data source.
-
-- Legend: The legend section, which explains the color-coded AQI flags and their meanings.
-
-- Report Data: The main report data, including location-specific AQI values, main pollutants, and health recommendations.
-
-- Attachment: The complete report is attached in an Excel file named "modified_history.xlsx."
-
-- Closing Message: A closing message expressing gratitude for the recipient's commitment to children's safety and well-being.
-
-- The report is designed to provide valuable information about air quality while maintaining a professional and informative format.
-
-## Sources
-IQAir API: https://api-docs.iqair.com/
-EPA Air Quality Index: https://www.epa.gov/air-research
-
-
-
+For any questions or assistance, please contact the technical support team at [support@example.com](mailto:support@example.com).
